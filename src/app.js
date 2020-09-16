@@ -1,39 +1,52 @@
-require('dotenv').config()
-const express = require('express')
-const morgan = require('morgan')
-const cors = require('cors')
-const helmet = require('helmet')
-const { NODE_ENV } = require('./config')
-const app = express()
+require('dotenv').config();
+const express = require('express');
+const morgan = require('morgan');
+const cors = require('cors');
+const helmet = require('helmet');
+const { NODE_ENV } = require('./config');
+const noteful = require('./noteful.json');
+const notesRouter = require('./notes/notes-router');
+const foldersRouter = require('./folders/folders-router');
 
-const foldersRouter = require('./folders/folders-router')
-const notesRouter = require('./notes/notes-router')
+const app = express()
+// const jsonParser = express.json()
 
 const morganOption = (NODE_ENV === 'production')
   ? 'tiny'
-    : 'common';
+  : 'common';
 
-const { v4: uuid } = require('uuid');
+// const logger = winston.createLogger({
+// level: 'info',
+// format: winston.format.json(),
+// transports: [
+//     new winston.transports.File({ filename: 'info.log' })
+// ]
+// });
+
+// if (NODE_ENV !== 'production') {
+// logger.add(new winston.transports.Console({
+//     format: winston.format.simple()
+// }));
+// }
 
 app.use(morgan(morganOption))
 app.use(helmet())
 app.use(cors())
 
-app.use(function validateBearerToken(req, res, next) {
-    const apiToken = process.env.API_TOKEN
-    const authToken = req.get('Authorization')
+app.use('/api/notes', notesRouter)
+app.use('/api/folders', foldersRouter)
 
-    if (!authToken || authToken.split(' ')[1] !== apiToken) {
-        return res.status(401).json({ error: 'Unauthorized request' })
-    }
-    // move to the next middleware
-    next()
+// app.get('/api/folders', (req, res) => {
+//     res.status(200);
+//     res.send(noteful.folders)
+// })
+
+app.get('/api', (req, res) => {
+    res.send(noteful)
 })
 
-app.use('/api/folder',foldersRouter)
-app.use('/api/note', notesRouter)
-
 app.get('/', (req, res) => {
+    // res.send(noteful)
     res.send('Hello, world!')
 })
 
@@ -45,7 +58,6 @@ app.use(function errorHandler(error, req, res, next) {
         console.error(error)
         response = { message: error.message, error }
     }
-
     res.status(500).json(response)
 })
 

@@ -1,1 +1,0 @@
-CREATE DATABASE test_noteful OWNER =  dunder_mifflin
